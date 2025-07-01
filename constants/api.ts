@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Konfigurasi endpoint API utama
-export const BASE_URL = 'http://192.168.1.8:8000';
+export const BASE_URL = 'http://192.168.56.42:8000';
 
 export const LOGIN_ENDPOINT = BASE_URL + '/api/auth/login';
 export const SISWA_ANAK_ENDPOINT = BASE_URL + '/api/siswa-anak';
@@ -90,6 +90,28 @@ export async function fetchBiayaByNoPendaftaran(token: string, no_pendaftaran: s
         },
         params: {
           no_pendaftaran,
+        },
+      }
+    );
+    return response.data; // sesuai contoh, response berupa array
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Gagal mengambil detail siswa');
+  }
+}
+
+
+
+export async function fetchRencanasppByKodeBiaya(token: string, kode_biaya: string) {
+  try {
+    const response = await axios.get(
+      BASE_URL + `/api/getrencanaspp-by-kodebiaya`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+        params: {
+          kode_biaya,
         },
       }
     );

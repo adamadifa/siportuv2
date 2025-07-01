@@ -2,10 +2,11 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams } from 'expo-router';
+import { Skeleton } from 'moti/skeleton';
 import React, { useEffect, useState } from 'react';
 import { Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
-import { fetchBiayaByNoPendaftaran, fetchDataUnitBySiswa, fetchSiswaById } from '../constants/api';
+import { fetchBiayaByNoPendaftaran, fetchDataUnitBySiswa, fetchRencanasppByKodeBiaya, fetchSiswaById } from '../constants/api';
 import BottomNavigation from './BottomNavigation';
 // Utility: Format number to Rupiah (e.g., 10000 -> 10.000)
 export function formatRupiah(angka: number | string): string {
@@ -14,7 +15,25 @@ export function formatRupiah(angka: number | string): string {
     return number.toLocaleString('id-ID');
 }
 
-import { Skeleton } from 'moti/skeleton';
+export function formatTanggal(tanggal: string): string {
+    const date = new Date(tanggal);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${day}-${month}-${year}`;
+}
+
+
+export function getNamaBulan(bulan: number): string {
+  const namaBulan = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+  
+  // Pastikan input bulan valid (1-12), kurangi 1 karena array dimulai dari 0
+  return namaBulan[Math.max(0, Math.min(11, bulan - 1))];
+}
+
 
 export const MyProfileSkeleton = () => {
     return (
@@ -112,6 +131,43 @@ export const BillListSkeleton = ({ count = 3 }) => (
 );
 
 
+const SkeletonSppList = () => {
+    // Misal tampilkan 6 skeleton card
+    return (
+        <ScrollView style={{ maxHeight: 500 }} showsVerticalScrollIndicator={false}>
+            {[...Array(6)].map((_, idx) => (
+                <View
+                    key={idx}
+                    style={{
+                        backgroundColor: '#e4f2ea',
+                        borderRadius: 14,
+                        padding: 12,
+                        marginBottom: 10,
+                    }}
+                >
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <Skeleton width={90} height={16} colorMode="light" radius={6} />
+                        <Skeleton width={110} height={12} colorMode="light" radius={6} />
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+                        <Skeleton width={60} height={12} colorMode="light" radius={6} />
+                        <Skeleton width={90} height={14} colorMode="light" radius={6} />
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+                        <Skeleton width={60} height={12} colorMode="light" radius={6} />
+                        <Skeleton width={90} height={14} colorMode="light" radius={6} />
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                        <Skeleton width={60} height={12} colorMode="light" radius={6} />
+                        <Skeleton width={90} height={14} colorMode="light" radius={6} />
+                    </View>
+                </View>
+            ))}
+        </ScrollView>
+    );
+};
+
+
 const TagihanScreen = () => {
     // State untuk bottom navigation
     const [activeTabNav, setActiveTabNav] = useState('tagihan');
@@ -122,9 +178,13 @@ const TagihanScreen = () => {
     // State untuk filter unit/jenjang
     const [unitList, setUnitList] = useState<any[]>([]);
     const [selectedUnit, setSelectedUnit] = useState<string>('');
+    const [selectedKodebiaya, setSelectedKodebiaya] = useState<string>('');
+    const [selectedTahunajaran, setSelectedTahunajaran] = useState<string>('');
     const [activeSiswa, setActiveSiswa] = useState<any>(null);
     const [biayaList, setBiayaList] = useState<any[]>([]);
     const [loadingBiaya, setLoadingBiaya] = useState(true);
+    const [rencanasppList, setRencanasppList] = useState<any[]>([]);
+    const [loadingRencanaspp, setLoadingRencanaspp] = useState(true);
     const { id_siswa } = useLocalSearchParams();
 
 
@@ -179,8 +239,34 @@ const TagihanScreen = () => {
             }
         };
         fetchBiaya();
-        // console.log('Biaya List:', biayaList);
+        console.log('Biaya List:', biayaList);
     }, [selectedUnit]);
+
+
+
+    useEffect(() => {
+        const fetchRencanaspp = async () => {
+            setLoadingRencanaspp(true);
+            try {
+                const token = await AsyncStorage.getItem('token');
+                if (!token || !selectedKodebiaya) {
+                    setLoadingRencanaspp(false);
+                    return;
+                }
+                const data = await fetchRencanasppByKodeBiaya(token, selectedKodebiaya);
+                console.log(data);
+                setRencanasppList(data);
+            } catch (err) {
+                setRencanasppList([]);
+                console.log('error', err);
+            } finally {
+                setLoadingRencanaspp(false);
+            }
+        };
+        fetchRencanaspp();
+        //console.log('Rencana SPP List:', rencanasppList);
+
+    }, [selectedKodebiaya]);
 
 
 
@@ -192,22 +278,13 @@ const TagihanScreen = () => {
     // State modal SPP
     const [showSppModal, setShowSppModal] = useState(false);
 
-    // Dummy breakdown SPP per bulan
-    const sppDetailList = [
-        { bulan: 'Agustus 2024', jatuhTempo: '10-08-2024', tagihan: 250000, bayar: 0 },
-        { bulan: 'September 2024', jatuhTempo: '10-09-2024', tagihan: 250000, bayar: 0 },
-        { bulan: 'Oktober 2024', jatuhTempo: '10-10-2024', tagihan: 250000, bayar: 0 },
-        { bulan: 'November 2024', jatuhTempo: '10-11-2024', tagihan: 250000, bayar: 0 },
-        { bulan: 'Desember 2024', jatuhTempo: '10-12-2024', tagihan: 250000, bayar: 0 },
-        { bulan: 'Januari 2025', jatuhTempo: '10-01-2025', tagihan: 250000, bayar: 0 },
-        { bulan: 'Februari 2025', jatuhTempo: '10-02-2025', tagihan: 250000, bayar: 0 },
-        { bulan: 'Maret 2025', jatuhTempo: '10-03-2025', tagihan: 250000, bayar: 0 },
-        { bulan: 'April 2025', jatuhTempo: '10-04-2025', tagihan: 250000, bayar: 0 },
-        { bulan: 'Mei 2025', jatuhTempo: '10-05-2025', tagihan: 250000, bayar: 0 },
-        { bulan: 'Juni 2025', jatuhTempo: '10-06-2025', tagihan: 250000, bayar: 0 },
-        { bulan: 'Juli 2025', jatuhTempo: '10-07-2025', tagihan: 250000, bayar: 0 },
-    ];
-    const totalSpp = sppDetailList.reduce((sum, cur) => sum + cur.tagihan, 0);
+    const totalSpp = rencanasppList.reduce((sum, cur) => sum + cur.jumlah, 0);
+    const totalBiaya = biayaList.reduce((sum, cur) => sum + cur.jumlah, 0);
+    const totalPotongan = biayaList.reduce((sum, cur) => sum + cur.jumlah_potongan, 0);
+    const totalMutasi = biayaList.reduce((sum, cur) => sum + cur.jumlah_mutasi, 0);
+    const totalTagihan = parseInt(totalBiaya) - parseInt(totalPotongan) - parseInt(totalMutasi);
+    const totalBayar = biayaList.reduce((sum, cur) => sum + cur.jmlbayar, 0);
+    const totalSisa = totalTagihan- parseInt(totalBayar);
 
     return (
         <View style={{ flex: 1, backgroundColor: '#f8f8f8' }}>
@@ -252,7 +329,7 @@ const TagihanScreen = () => {
                                         <Feather name="map-pin" size={13} color="#fff" />
                                         <Text style={styles.profileInfoFancyGreen}> {activeSiswa.nama_kota}</Text>
                                         <Feather name="calendar" size={13} color="#fff" style={{ marginLeft: 8 }} />
-                                        <Text style={styles.profileInfoFancyGreen}> {activeSiswa.tanggal_lahir}</Text>
+                                        <Text style={styles.profileInfoFancyGreen}> {formatTanggal(activeSiswa.tanggal_lahir)}</Text>
                                     </View>
                                     <View style={styles.profileInfoRow}>
                                         <Feather name="user" size={13} color="#fff" />
@@ -298,7 +375,11 @@ const TagihanScreen = () => {
                         ) : (
                             biayaList.map((item, idx) => (
                                 item.kode_jenis_biaya === 'B07' ? (
-                                    <TouchableOpacity key={idx} style={styles.billCard} onPress={() => setShowSppModal(true)} activeOpacity={0.7}>
+                                    <TouchableOpacity key={idx} style={styles.billCard} onPress={() => {
+                                        setSelectedKodebiaya(item.kode_biaya);
+                                        setSelectedTahunajaran(item.tahun_ajaran);
+                                        setShowSppModal(true);
+                                    }} activeOpacity={0.7}>
                                         <View style={styles.billCardTopRow}>
                                             <Text style={styles.billCode}>Kode: {item.kode_jenis_biaya} {item.tahun_ajaran}</Text>
                                             <View style={styles.badgeKategoriModern}>
@@ -329,11 +410,11 @@ const TagihanScreen = () => {
                                             <Text style={[styles.billValueModern, { color: '#14532d' }]}>Rp {formatRupiah(item.jmlbayar)}</Text>
                                         </View>
 
-                                        <View style={styles.billRowModern}>
+                                        {/* <View style={styles.billRowModern}>
                                             <Feather name="check-circle" size={16} color="#14532d" style={{ marginRight: 8 }} />
                                             <Text style={styles.billLabelModern}>Bayar</Text>
                                             <Text style={[styles.billValueModern, { color: '#14532d' }]}>Rp {formatRupiah(item.jmlbayar)}</Text>
-                                        </View>
+                                        </View> */}
                                         {/* <View style={styles.billRowModern}>
                                         <Feather name="alert-circle" size={16} color="#e53935" style={{ marginRight: 8 }} />
                                         <Text style={styles.billLabelModern}>Sisa Tagihan</Text>
@@ -493,16 +574,28 @@ const TagihanScreen = () => {
                             {/* Ornamen dekoratif sudut kanan bawah */}
                             <View style={[styles.summaryOrnament, { bottom: -24, right: -24, width: 90, height: 90, borderRadius: 45, backgroundColor: '#fff1' }]} />
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                <Text style={{ fontWeight: 'bold', fontSize: 15, color: '#fff' }}>Total Biaya</Text>
+                                <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#ffe082' }}>Rp {formatRupiah(totalBiaya)}</Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                <Text style={{ fontWeight: 'bold', fontSize: 15, color: '#fff' }}>Total Potongan</Text>
+                                <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#ffe082' }}>Rp {formatRupiah(totalPotongan)}</Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                <Text style={{ fontWeight: 'bold', fontSize: 15, color: '#fff' }}>Total Mutasi</Text>
+                                <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#ffe082' }}>Rp {formatRupiah(totalMutasi)}</Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                                 <Text style={{ fontWeight: 'bold', fontSize: 15, color: '#fff' }}>Total Tagihan</Text>
-                                <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#ffe082' }}>Rp 5.000.000</Text>
+                                <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#ffe082' }}>Rp {formatRupiah(totalTagihan)}</Text>
                             </View>
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                                 <Text style={{ fontWeight: 'bold', fontSize: 15, color: '#fff' }}>Total Bayar</Text>
-                                <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#fffde7' }}>Rp 2.500.000</Text>
+                                <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#fffde7' }}>Rp {formatRupiah(totalBayar)}</Text>
                             </View>
                             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <Text style={{ fontWeight: 'bold', fontSize: 15, color: '#fff' }}>Sisa Bayar</Text>
-                                <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#ffcdd2' }}>Rp 2.500.000</Text>
+                                <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#ffcdd2' }}>Rp {formatRupiah(totalSisa)}</Text>
                             </View>
                         </View>
                     )}
@@ -516,33 +609,39 @@ const TagihanScreen = () => {
                         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.25)', justifyContent: 'center', alignItems: 'center' }}>
                             <View style={{ backgroundColor: '#fff', borderRadius: 18, padding: 18, width: '92%', maxWidth: 420, elevation: 5 }}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                                    <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#236c30' }}>Detail SPP 2024/2025</Text>
+                                    <Text style={{ fontWeight: 'bold', fontSize: 18, color: '#236c30' }}>Detail SPP {selectedTahunajaran}</Text>
                                     <TouchableOpacity onPress={() => setShowSppModal(false)}>
                                         <Feather name="x" size={24} color="#222" />
                                     </TouchableOpacity>
                                 </View>
-                                <ScrollView style={{ maxHeight: 500 }} showsVerticalScrollIndicator={false}>
-                                    {sppDetailList.map((item: { bulan: string, jatuhTempo: string, tagihan: number, bayar: number }, idx: number) => (
-                                        <View key={idx} style={{ backgroundColor: '#d1e7dd', borderRadius: 14, padding: 12, marginBottom: 10 }}>
-                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                                                <Text style={{ fontWeight: 'bold', color: '#236c30' }}>{item.bulan}</Text>
-                                                <Text style={{ fontSize: 12, color: '#888' }}>Jatuh Tempo: {item.jatuhTempo}</Text>
+                                {loadingRencanaspp ? (
+                                    <SkeletonSppList />
+                                ) : rencanasppList && rencanasppList.length > 0 ? (
+                                    <ScrollView style={{ maxHeight: 500 }} showsVerticalScrollIndicator={false}>
+                                        {rencanasppList.map((item: { bulan: number, tahun: string, jumlah: number, realisasi: number }, idx: number) => (
+                                            <View key={idx} style={{ backgroundColor: '#d1e7dd', borderRadius: 14, padding: 12, marginBottom: 10 }}>
+                                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                                    <Text style={{ fontWeight: 'bold', color: '#236c30' }}>{getNamaBulan(item.bulan)} {item.tahun}</Text>
+                                                    <Text style={{ fontSize: 12, color: '#888' }}>Jatuh Tempo: {`10-${item.bulan}-${item.tahun}`}</Text>
+                                                </View>
+                                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+                                                    <Text style={{ color: '#236c30' }}>Tagihan</Text>
+                                                    <Text style={{ color: '#236c30', fontWeight: 'bold' }}>Rp {item.jumlah.toLocaleString('id-ID')}</Text>
+                                                </View>
+                                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+                                                    <Text style={{ color: '#236c30' }}>Bayar</Text>
+                                                    <Text style={{ color: '#1976d2' }}>Rp {item.realisasi.toLocaleString('id-ID')}</Text>
+                                                </View>
+                                                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                                    <Text style={{ color: '#236c30' }}>Sisa</Text>
+                                                    <Text style={{ color: '#e53935', fontWeight: 'bold' }}>Rp {(item.jumlah - item.realisasi).toLocaleString('id-ID')}</Text>
+                                                </View>
                                             </View>
-                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
-                                                <Text style={{ color: '#236c30' }}>Tagihan</Text>
-                                                <Text style={{ color: '#236c30', fontWeight: 'bold' }}>Rp {item.tagihan.toLocaleString('id-ID')}</Text>
-                                            </View>
-                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
-                                                <Text style={{ color: '#236c30' }}>Bayar</Text>
-                                                <Text style={{ color: '#1976d2' }}>Rp {item.bayar.toLocaleString('id-ID')}</Text>
-                                            </View>
-                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                                                <Text style={{ color: '#236c30' }}>Sisa</Text>
-                                                <Text style={{ color: '#e53935', fontWeight: 'bold' }}>Rp {(item.tagihan - item.bayar).toLocaleString('id-ID')}</Text>
-                                            </View>
-                                        </View>
-                                    ))}
-                                </ScrollView>
+                                        ))}
+                                    </ScrollView>
+                                ) : (
+                                    <Text style={{ textAlign: 'center', marginTop: 20 }}>Data tidak ditemukan</Text>
+                                )}
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, backgroundColor: '#236c30', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16 }}>
                                     <Text style={{ fontWeight: 'bold', color: '#fff', fontSize: 16 }}>TOTAL</Text>
                                     <Text style={{ fontWeight: 'bold', color: '#fff', fontSize: 16 }}>Rp {totalSpp.toLocaleString('id-ID')}</Text>
@@ -915,9 +1014,9 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     billTotalModern: {
-        fontWeight: 'bold',
+        fontWeight: '600',
         color: '#14532d',
-        fontSize: 22,
+        fontSize: 20,
         letterSpacing: 0.1,
     },
     billCode: {
