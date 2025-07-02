@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
+import { registerOrangtua } from '@/constants/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Toast, { BaseToastProps } from 'react-native-toast-message';
+import { CustomToast } from '../components/CustomToast';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -11,7 +15,7 @@ export default function RegisterScreen() {
     password: '',
     konfirmasi: '',
   });
-  const [fieldError, setFieldError] = useState<{[k: string]: string}>({});
+  const [fieldError, setFieldError] = useState<{ [k: string]: string }>({});
   const [loading, setLoading] = useState(false);
 
   const handleChange = (key: string, value: string) => {
@@ -25,95 +29,154 @@ export default function RegisterScreen() {
     });
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
+    setFieldError({});
     let valid = true;
-    let err: {[k: string]: string} = {};
-    if (!form.nama.trim()) { err.nama = 'Nama wajib diisi'; valid = false; }
-    if (!form.email.trim()) { err.email = 'Email wajib diisi'; valid = false; }
-    if (!form.nik.trim()) { err.nik = 'NIK wajib diisi'; valid = false; }
-    if (!form.password) { err.password = 'Password wajib diisi'; valid = false; }
-    if (!form.konfirmasi) { err.konfirmasi = 'Konfirmasi password wajib diisi'; valid = false; }
-    if (form.password && form.konfirmasi && form.password !== form.konfirmasi) {
-      err.konfirmasi = 'Konfirmasi password harus sama'; valid = false;
+    let newFieldError: { [key: string]: string } = {};
+
+    // Validasi NIK minimal 16 karakter
+    if (!form.nik || form.nik.length < 16) {
+      newFieldError.nik = 'NIK minimal 16 karakter';
+      valid = false;
     }
-    setFieldError(err);
+    // Validasi password minimal 6 karakter
+    if (!form.password || form.password.length < 6) {
+      newFieldError.password = 'Password minimal 6 karakter';
+      valid = false;
+    }
+
+    if (!form.nama.trim()) { newFieldError.nama = 'Nama wajib diisi'; valid = false; }
+    if (!form.email.trim()) { newFieldError.email = 'Email wajib diisi'; valid = false; }
+    if (!form.nik.trim()) { newFieldError.nik = 'NIK wajib diisi'; valid = false; }
+    if (!form.password) { newFieldError.password = 'Password wajib diisi'; valid = false; }
+    if (!form.konfirmasi) { newFieldError.konfirmasi = 'Konfirmasi password wajib diisi'; valid = false; }
+    if (form.password && form.konfirmasi && form.password !== form.konfirmasi) {
+      newFieldError.konfirmasi = 'Konfirmasi password tidak cocok';
+      valid = false;
+    }
+    setFieldError(newFieldError);
     if (!valid) return;
     setLoading(true);
-    // lanjutkan submit ke backend di sini
-    setLoading(false);
+    // Panggil API registerOrangtua
+    registerOrangtua({
+      name: form.nama,
+      email: form.email,
+      password: form.password,
+      password_confirmation: form.konfirmasi,
+      nik: form.nik,
+    })
+      .then(async (res: any) => {
+        console.log('Register response:', res);
+        Toast.show({
+          type: 'success',
+          text1: 'Registrasi Berhasil',
+          text2: res.message || 'Akun berhasil dibuat',
+        });
+        if (res.token) {
+          try {
+            await AsyncStorage.setItem('token', res.token);
+          } catch (e) {
+            Toast.show({ type: 'error', text1: 'Gagal menyimpan token' });
+          }
+        }
+        setTimeout(() => {
+          router.replace('/login');
+          setLoading(false);
+        }, 1200);
+      })
+      .catch((err: any) => {
+        console.log('Register error:', err);
+        Toast.show({
+          type: 'error',
+          text1: 'Registrasi Gagal',
+          text2: err.message || 'Gagal membuat akun',
+        });
+        setLoading(false);
+      });
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-      <View style={styles.logoWrapper}>
-        <Image source={require('../assets/images/logo.png')} style={styles.logo} />
-      </View>
-      <Text style={styles.title}>SiPortu</Text>
-      <Text style={styles.subtitle}>Daftar akun baru untuk orang tua siswa</Text>
-      <View style={styles.inputWrapper}>
-        <TextInput
-          placeholder="Nama Lengkap"
-          placeholderTextColor="#999"
-          style={[styles.input, form.nama.trim() && !fieldError.nama ? { borderColor: '#43a047' } : fieldError.nama ? { borderColor: '#e53935' } : null]}
-          value={form.nama}
-          onChangeText={v => handleChange('nama', v)}
-        />
-        {!!fieldError.nama && <Text style={styles.fieldError}>{fieldError.nama}</Text>}
-      </View>
-      <View style={styles.inputWrapper}>
-        <TextInput
-          placeholder="Email"
-          placeholderTextColor="#999"
-          style={[styles.input, form.email.trim() && !fieldError.email ? { borderColor: '#43a047' } : fieldError.email ? { borderColor: '#e53935' } : null]}
-          keyboardType="email-address"
-          value={form.email}
-          onChangeText={v => handleChange('email', v)}
-        />
-        {!!fieldError.email && <Text style={styles.fieldError}>{fieldError.email}</Text>}
-      </View>
-      <View style={styles.inputWrapper}>
-        <TextInput
-          placeholder="NIK"
-          placeholderTextColor="#999"
-          style={[styles.input, form.nik.trim() && !fieldError.nik ? { borderColor: '#43a047' } : fieldError.nik ? { borderColor: '#e53935' } : null]}
-          keyboardType="numeric"
-          value={form.nik}
-          onChangeText={v => handleChange('nik', v)}
-        />
-        {!!fieldError.nik && <Text style={styles.fieldError}>{fieldError.nik}</Text>}
-      </View>
-      <View style={styles.inputWrapper}>
-        <TextInput
-          placeholder="Password"
-          placeholderTextColor="#999"
-          style={[styles.input, form.password && !fieldError.password ? { borderColor: '#43a047' } : fieldError.password ? { borderColor: '#e53935' } : null]}
-          secureTextEntry
-          value={form.password}
-          onChangeText={v => handleChange('password', v)}
-        />
-        {!!fieldError.password && <Text style={styles.fieldError}>{fieldError.password}</Text>}
-      </View>
-      <View style={styles.inputWrapper}>
-        <TextInput
-          placeholder="Konfirmasi Password"
-          placeholderTextColor="#999"
-          style={[styles.input, form.konfirmasi && !fieldError.konfirmasi ? { borderColor: '#43a047' } : fieldError.konfirmasi ? { borderColor: '#e53935' } : null]}
-          secureTextEntry
-          value={form.konfirmasi}
-          onChangeText={v => handleChange('konfirmasi', v)}
-        />
-        {!!fieldError.konfirmasi && <Text style={styles.fieldError}>{fieldError.konfirmasi}</Text>}
-      </View>
-      <TouchableOpacity style={[styles.button, loading && { opacity: 0.7 }]} onPress={handleRegister} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? 'Loading...' : 'Daftar'}</Text>
-      </TouchableOpacity>
-      <View style={styles.bottomTextWrapper}>
-        <Text style={styles.bottomText}>Sudah punya akun? </Text>
-        <TouchableOpacity onPress={() => router.replace('/login')}>
-          <Text style={styles.registerText}>Login di sini</Text>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <View style={styles.logoWrapper}>
+          <Image source={require('../assets/images/logo.png')} style={styles.logo} />
+        </View>
+        <Text style={styles.title}>SiPortu</Text>
+        <Text style={styles.subtitle}>Daftar akun baru untuk orang tua siswa</Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            placeholder="Nama Lengkap"
+            placeholderTextColor="#999"
+            style={[styles.input, form.nama.trim() && !fieldError.nama ? { borderColor: '#43a047' } : fieldError.nama ? { borderColor: '#e53935' } : null]}
+            value={form.nama}
+            onChangeText={v => handleChange('nama', v)}
+          />
+          {!!fieldError.nama && <Text style={styles.fieldError}>{fieldError.nama}</Text>}
+        </View>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            placeholder="Email"
+            placeholderTextColor="#999"
+            style={[styles.input, form.email.trim() && !fieldError.email ? { borderColor: '#43a047' } : fieldError.email ? { borderColor: '#e53935' } : null]}
+            keyboardType="email-address"
+            value={form.email}
+            onChangeText={v => handleChange('email', v)}
+          />
+          {!!fieldError.email && <Text style={styles.fieldError}>{fieldError.email}</Text>}
+        </View>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            placeholder="NIK"
+            placeholderTextColor="#999"
+            style={[styles.input, form.nik.trim() && !fieldError.nik ? { borderColor: '#43a047' } : fieldError.nik ? { borderColor: '#e53935' } : null]}
+            keyboardType="numeric"
+            value={form.nik}
+            onChangeText={v => handleChange('nik', v)}
+          />
+          {!!fieldError.nik && <Text style={styles.fieldError}>{fieldError.nik}</Text>}
+        </View>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            placeholder="Password"
+            placeholderTextColor="#999"
+            style={[styles.input, form.password && !fieldError.password ? { borderColor: '#43a047' } : fieldError.password ? { borderColor: '#e53935' } : null]}
+            secureTextEntry
+            value={form.password}
+            onChangeText={v => handleChange('password', v)}
+          />
+          {!!fieldError.password && <Text style={styles.fieldError}>{fieldError.password}</Text>}
+        </View>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            placeholder="Konfirmasi Password"
+            placeholderTextColor="#999"
+            style={[styles.input, form.konfirmasi && !fieldError.konfirmasi ? { borderColor: '#43a047' } : fieldError.konfirmasi ? { borderColor: '#e53935' } : null]}
+            secureTextEntry
+            value={form.konfirmasi}
+            onChangeText={v => handleChange('konfirmasi', v)}
+          />
+          {!!fieldError.konfirmasi && <Text style={styles.fieldError}>{fieldError.konfirmasi}</Text>}
+        </View>
+        <TouchableOpacity style={[styles.button, loading && { opacity: 0.7 }]} onPress={handleRegister} disabled={loading}>
+          <Text style={styles.buttonText}>{loading ? 'Loading...' : 'Daftar'}</Text>
         </TouchableOpacity>
-      </View>
-    </ScrollView>
+        <View style={styles.bottomTextWrapper}>
+          <Text style={styles.bottomText}>Sudah punya akun? </Text>
+          <TouchableOpacity onPress={() => router.replace('/login')}>
+            <Text style={styles.registerText}>Login di sini</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+      <Toast config={{
+        success: (props: BaseToastProps) => <CustomToast {...props} type="success" />,
+        error: (props: BaseToastProps) => <CustomToast {...props} type="error" />,
+        info: (props: BaseToastProps) => <CustomToast {...props} type="info" />,
+        warning: (props: BaseToastProps) => <CustomToast {...props} type="warning" />,
+      }} />
+    </KeyboardAvoidingView>
   );
 }
 

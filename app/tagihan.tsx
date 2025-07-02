@@ -4,9 +4,12 @@ import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams } from 'expo-router';
 import { Skeleton } from 'moti/skeleton';
 import React, { useEffect, useState } from 'react';
-import { Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
-import { fetchBiayaByNoPendaftaran, fetchDataUnitBySiswa, fetchRencanasppByKodeBiaya, fetchSiswaById } from '../constants/api';
+import {
+    fetchBiayaByNoPendaftaran, fetchDataUnitBySiswa, fetchDetailHistoriBayar, fetchHistoribayar,
+    fetchRencanasppByKodeBiaya, fetchSiswaById
+} from '../constants/api';
 import BottomNavigation from './BottomNavigation';
 // Utility: Format number to Rupiah (e.g., 10000 -> 10.000)
 export function formatRupiah(angka: number | string): string {
@@ -25,13 +28,13 @@ export function formatTanggal(tanggal: string): string {
 
 
 export function getNamaBulan(bulan: number): string {
-  const namaBulan = [
-    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-  ];
-  
-  // Pastikan input bulan valid (1-12), kurangi 1 karena array dimulai dari 0
-  return namaBulan[Math.max(0, Math.min(11, bulan - 1))];
+    const namaBulan = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+
+    // Pastikan input bulan valid (1-12), kurangi 1 karena array dimulai dari 0
+    return namaBulan[Math.max(0, Math.min(11, bulan - 1))];
 }
 
 
@@ -168,6 +171,53 @@ const SkeletonSppList = () => {
 };
 
 
+// Skeleton untuk loading histori bayar (payment history)
+export const PaymentHistorySkeleton = ({ count = 3 }) => (
+    <>
+        {Array.from({ length: count }).map((_, idx) => (
+            <View key={idx} style={styles.paymentCard}>
+                {/* Row: No. Nota & Tanggal */}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ marginRight: 6 }}>
+                            <Skeleton width={18} height={18} radius={9} colors={["#eee", "#f5f5f5"]} />
+                        </View>
+                        <Skeleton width={80} height={14} radius={6} colors={["#eee", "#f5f5f5"]} />
+                    </View>
+                    <Skeleton width={70} height={13} radius={6} colors={["#eee", "#f5f5f5"]} />
+                </View>
+                {/* Row: Jumlah */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ marginRight: 4 }}>
+                            <Skeleton width={16} height={16} radius={8} colors={["#eee", "#f5f5f5"]} />
+                        </View>
+                        <Skeleton width={50} height={13} radius={6} colors={["#eee", "#f5f5f5"]} />
+                    </View>
+                    <Skeleton width={80} height={15} radius={6} colors={["#eee", "#f5f5f5"]} />
+                </View>
+                {/* Row: Petugas */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={{ marginRight: 4 }}>
+                            <Skeleton width={16} height={16} radius={8} colors={["#eee", "#f5f5f5"]} />
+                        </View>
+                        <Skeleton width={55} height={13} radius={6} colors={["#eee", "#f5f5f5"]} />
+                    </View>
+                    <Skeleton width={60} height={13} radius={6} colors={["#eee", "#f5f5f5"]} />
+                </View>
+                {/* Row: Keterangan */}
+                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                    <View style={{ marginRight: 4 }}>
+                        <Skeleton width={16} height={16} radius={8} colors={["#eee", "#f5f5f5"]} />
+                    </View>
+                    <Skeleton width={150} height={13} radius={6} colors={["#eee", "#f5f5f5"]} />
+                </View>
+            </View>
+        ))}
+    </>
+);
+
 const TagihanScreen = () => {
     // State untuk bottom navigation
     const [activeTabNav, setActiveTabNav] = useState('tagihan');
@@ -185,8 +235,12 @@ const TagihanScreen = () => {
     const [loadingBiaya, setLoadingBiaya] = useState(true);
     const [rencanasppList, setRencanasppList] = useState<any[]>([]);
     const [loadingRencanaspp, setLoadingRencanaspp] = useState(true);
+    const [historibayarList, setHistoribayarList] = useState<any[]>([]);
+    const [loadingHistoribayar, setLoadingHistoribayar] = useState(true);
+    const [detailHistoribayarList, setDetailHistoribayarList] = useState<any[]>([]);
+    const [loadingDetailHistoribayar, setLoadingDetailHistoribayar] = useState(true);
     const { id_siswa } = useLocalSearchParams();
-
+    const [refreshing, setRefreshing] = useState(false);
 
 
 
@@ -207,6 +261,8 @@ const TagihanScreen = () => {
     }, [id_siswa, selectedUnit]);
 
 
+
+
     useEffect(() => {
         const fetchSiswa = async () => {
             try {
@@ -221,23 +277,24 @@ const TagihanScreen = () => {
         fetchSiswa();
     }, [id_siswa]);
 
-    useEffect(() => {
-        const fetchBiaya = async () => {
-            setLoadingBiaya(true);
-            try {
-                const token = await AsyncStorage.getItem('token');
-                if (!token || !selectedUnit) {
-                    setLoadingBiaya(false);
-                    return;
-                }
-                const data = await fetchBiayaByNoPendaftaran(token, selectedUnit);
-                setBiayaList(data);
-            } catch (err) {
-                setBiayaList([]);
-            } finally {
+
+    const fetchBiaya = async () => {
+        setLoadingBiaya(true);
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token || !selectedUnit) {
                 setLoadingBiaya(false);
+                return;
             }
-        };
+            const data = await fetchBiayaByNoPendaftaran(token, selectedUnit);
+            setBiayaList(data);
+        } catch (err) {
+            setBiayaList([]);
+        } finally {
+            setLoadingBiaya(false);
+        }
+    };
+    useEffect(() => {
         fetchBiaya();
         console.log('Biaya List:', biayaList);
     }, [selectedUnit]);
@@ -254,7 +311,7 @@ const TagihanScreen = () => {
                     return;
                 }
                 const data = await fetchRencanasppByKodeBiaya(token, selectedKodebiaya);
-                console.log(data);
+                //console.log(data);
                 setRencanasppList(data);
             } catch (err) {
                 setRencanasppList([]);
@@ -270,21 +327,67 @@ const TagihanScreen = () => {
 
 
 
+    const fetchHisitoribayartagihan = async () => {
+        setLoadingHistoribayar(true);
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token || !id_siswa) {
+                setLoadingHistoribayar(false);
+                return;
+            }
+            const data = await fetchHistoribayar(token, String(id_siswa));
+            console.log('Histori Bayar:', data);
+            setHistoribayarList(data);
+        } catch (err) {
+            setHistoribayarList([]);
+        } finally {
+            setLoadingHistoribayar(false);
+        }
+    };
+    useEffect(() => {
+        fetchHisitoribayartagihan();
+        console.log('Histori Bayar:', historibayarList);
+    }, [id_siswa]);
 
+
+    const fetchDetailbayar = async (no_bukti: string) => {
+        setLoadingDetailHistoribayar(true);
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token || !no_bukti) {
+                setLoadingDetailHistoribayar(false);
+                return;
+            }
+            const data = await fetchDetailHistoriBayar(token, no_bukti);
+            console.log('Detail Histori Bayar:', data);
+            setDetailHistoribayarList(data);
+        } catch (err) {
+            setDetailHistoribayarList([]);
+        } finally {
+            setLoadingDetailHistoribayar(false);
+        }
+    };
     // Filter tagihan sesuai unit jika diperlukan, contoh:
     // const tagihanFiltered = tagihanListDummy.filter(t => t.kode_unit === selectedUnit);
 
-
+    const onRefresh = async () => {
+        setRefreshing(true);
+        fetchBiaya();
+        fetchHisitoribayartagihan();
+        setRefreshing(false);
+    };
     // State modal SPP
     const [showSppModal, setShowSppModal] = useState(false);
 
-    const totalSpp = rencanasppList.reduce((sum, cur) => sum + cur.jumlah, 0);
-    const totalBiaya = biayaList.reduce((sum, cur) => sum + cur.jumlah, 0);
-    const totalPotongan = biayaList.reduce((sum, cur) => sum + cur.jumlah_potongan, 0);
-    const totalMutasi = biayaList.reduce((sum, cur) => sum + cur.jumlah_mutasi, 0);
+    const totalSpp = rencanasppList.reduce((sum, cur) => sum + Number(cur.jumlah), 0);
+    const totalRealisasispp = rencanasppList.reduce((sum, cur) => sum + Number(cur.realisasi), 0);
+    const totalSisaSpp = parseInt(totalSpp) - parseInt(totalRealisasispp);
+    const totalBiaya = biayaList.reduce((sum, cur) => sum + Number(cur.jumlah), 0);
+    const totalPotongan = biayaList.reduce((sum, cur) => sum + Number(cur.jumlah_potongan), 0);
+    const totalMutasi = biayaList.reduce((sum, cur) => sum + Number(cur.jumlah_mutasi), 0);
     const totalTagihan = parseInt(totalBiaya) - parseInt(totalPotongan) - parseInt(totalMutasi);
-    const totalBayar = biayaList.reduce((sum, cur) => sum + cur.jmlbayar, 0);
-    const totalSisa = totalTagihan- parseInt(totalBayar);
+    const totalBayar = biayaList.reduce((sum, cur) => sum + Number(cur.jmlbayar), 0);
+    const totalSisa = totalTagihan - parseInt(totalBayar);
 
     return (
         <View style={{ flex: 1, backgroundColor: '#f8f8f8' }}>
@@ -367,7 +470,12 @@ const TagihanScreen = () => {
                         </View>
                     </View>
                 </View>
-                <ScrollView contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 80 }} showsVerticalScrollIndicator={false}>
+                <ScrollView contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 80 }} showsVerticalScrollIndicator={false} refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                    />
+                }>
                     {/* Daftar Tagihan */}
                     {tab === 'detail' ? (
                         loadingBiaya ? (
@@ -463,49 +571,51 @@ const TagihanScreen = () => {
                     ) : (
                         // Daftar pembayaran
                         <>
-                            {[
-                                {
-                                    no: '250600001',
-                                    tanggal: '18 Juni 2025',
-                                    jumlah: 400000,
-                                    keterangan: 'SPP Juli',
-                                    petugas: 'Adam Abdi Al Ala',
-                                },
-                                // Tambahkan data pembayaran lain jika perlu
-                            ].map((item, idx) => (
-                                <TouchableOpacity
-                                    key={idx}
-                                    style={styles.paymentCard}
-                                    activeOpacity={0.8}
-                                    onPress={() => {
-                                        setSelectedPayment(item);
-                                        setShowPaymentModal(true);
-                                    }}
-                                >
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                                        <Text style={{ color: '#888', fontSize: 13 }}>{item.no}</Text>
-                                        <Text style={{ color: '#888', fontSize: 13 }}>{item.tanggal}</Text>
-                                    </View>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
-                                        <Text style={styles.paymentLabel}>Jumlah</Text>
-                                        <Text style={styles.paymentValue}>Rp {item.jumlah.toLocaleString('id-ID')}</Text>
-                                    </View>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
-                                        <Text style={styles.paymentLabel}>Keterangan</Text>
-                                        <Text style={styles.paymentValueDark}>{item.keterangan}</Text>
-                                    </View>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                        <Text style={styles.paymentLabel}>Petugas</Text>
-                                        <Text style={styles.paymentValueDarkBold}>{item.petugas}</Text>
-                                    </View>
-                                </TouchableOpacity>
-                            ))}
+                            {loadingHistoribayar ? (
+                                <PaymentHistorySkeleton />
+                            ) : Array.isArray(historibayarList) && historibayarList.length > 0 ? (
+                                historibayarList.map((item, idx) => (
+                                    <TouchableOpacity
+                                        key={idx}
+                                        style={styles.paymentCardModern}
+                                        activeOpacity={0.92}
+                                        onPress={() => {
+                                            setSelectedPayment(item);
+                                            setShowPaymentModal(true);
+                                            fetchDetailbayar(item.no_bukti);
+                                        }}
+                                    >
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                <Feather name="file-text" size={18} color="#388e3c" style={{ marginRight: 6 }} />
+                                                <Text style={styles.paymentNo}>{item.no_bukti}</Text>
+                                            </View>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                <Feather name="calendar" size={16} color="#888" style={{ marginRight: 4 }} />
+                                                <Text style={styles.paymentDate}>{item.tanggal}</Text>
+                                            </View>
+                                        </View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                <Feather name="dollar-sign" size={16} color="#14532d" style={{ marginRight: 4 }} />
+                                                <Text style={styles.paymentLabel}>Jumlah</Text>
+                                            </View>
+                                            <Text style={styles.paymentValue}>Rp {formatRupiah(item.jumlah)}</Text>
+                                        </View>
 
-                            {/* Modal Nota Pembayaran */}
-                            {/*
-                        Pastikan sudah install package QR code:
-                        npm install react-native-qrcode-svg
-                        */}
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                                <Feather name="user-check" size={16} color="#388e3c" style={{ marginRight: 4 }} />
+                                                <Text style={styles.paymentLabel}>Petugas</Text>
+                                            </View>
+                                            <Text style={styles.paymentPetugas}>{item.name}</Text>
+                                        </View>
+                                    </TouchableOpacity>
+                                ))
+                            ) : (
+                                <Text style={{ textAlign: 'center', color: '#888', marginTop: 16 }}>Tidak ada histori pembayaran</Text>
+                            )}
+
                             <Modal
                                 visible={showPaymentModal}
                                 animationType="slide"
@@ -517,16 +627,13 @@ const TagihanScreen = () => {
                                         {/* Logo & Judul */}
                                         <View style={styles.paymentReceiptCenter}>
                                             <Image source={require('../assets/images/logo.png')} style={styles.paymentReceiptLogo} resizeMode="contain" />
-                                            <Text style={styles.paymentReceiptSchool}>SDIT Cendekia Islami</Text>
-                                            <Text style={styles.paymentReceiptAddress}>Jl. Pendidikan No. 123, Kota Edukasi</Text>
-                                            <Text style={styles.paymentReceiptTitle}>Nota Pembayaran</Text>
                                         </View>
                                         <View style={styles.paymentReceiptDashed} />
                                         {selectedPayment && (
                                             <>
                                                 <View style={styles.paymentReceiptRowJustify}>
                                                     <Text style={styles.paymentReceiptLabel}>No. Transaksi</Text>
-                                                    <Text style={styles.paymentReceiptValueRight}>{selectedPayment.no}</Text>
+                                                    <Text style={styles.paymentReceiptValueRight}>{selectedPayment.no_bukti}</Text>
                                                 </View>
                                                 <View style={styles.paymentReceiptRowJustify}>
                                                     <Text style={styles.paymentReceiptLabel}>Tanggal</Text>
@@ -536,13 +643,21 @@ const TagihanScreen = () => {
                                                     <Text style={styles.paymentReceiptLabel}>Jumlah</Text>
                                                     <Text style={[styles.paymentReceiptValueRight, { color: '#14532d', fontWeight: 'bold', fontSize: 16 }]}>Rp {selectedPayment.jumlah.toLocaleString('id-ID')}</Text>
                                                 </View>
-                                                <View style={styles.paymentReceiptRowJustify}>
-                                                    <Text style={styles.paymentReceiptLabel}>Keterangan</Text>
-                                                    <Text style={styles.paymentReceiptValueRight}>{selectedPayment.keterangan}</Text>
+                                                {/* --- Tambahan Rincian Item Dummy --- */}
+                                                <View style={{ marginBottom: 7 }}>
+                                                    <Text style={{ fontWeight: 'bold', color: '#236c30', marginBottom: 2 }}>Rincian Pembayaran:</Text>
+                                                    {detailHistoribayarList.map((item, idx) => (
+                                                        <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
+                                                            <Text style={{ color: '#555', fontSize: 14 }}>{item.jenis_biaya}</Text>
+                                                            <Text style={{ color: '#14532d', fontWeight: 'bold', fontSize: 14 }}>Rp {formatRupiah(item.jumlah)}</Text>
+                                                        </View>
+                                                    ))}
                                                 </View>
+                                                {/* --- End Tambahan Rincian Item Dummy --- */}
+
                                                 <View style={styles.paymentReceiptRowJustify}>
                                                     <Text style={styles.paymentReceiptLabel}>Petugas</Text>
-                                                    <Text style={styles.paymentReceiptValueRight}>{selectedPayment.petugas}</Text>
+                                                    <Text style={styles.paymentReceiptValueRight}>{selectedPayment.name}</Text>
                                                 </View>
                                                 <View style={styles.paymentReceiptDashed} />
                                                 <View style={styles.paymentReceiptCenter}>
@@ -626,15 +741,15 @@ const TagihanScreen = () => {
                                                 </View>
                                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
                                                     <Text style={{ color: '#236c30' }}>Tagihan</Text>
-                                                    <Text style={{ color: '#236c30', fontWeight: 'bold' }}>Rp {item.jumlah.toLocaleString('id-ID')}</Text>
+                                                    <Text style={{ color: '#236c30', fontWeight: 'bold' }}>Rp {formatRupiah(item.jumlah)}</Text>
                                                 </View>
                                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 2 }}>
                                                     <Text style={{ color: '#236c30' }}>Bayar</Text>
-                                                    <Text style={{ color: '#1976d2' }}>Rp {item.realisasi.toLocaleString('id-ID')}</Text>
+                                                    <Text style={{ color: '#1976d2' }}>Rp {formatRupiah(item.realisasi)}</Text>
                                                 </View>
                                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                                                     <Text style={{ color: '#236c30' }}>Sisa</Text>
-                                                    <Text style={{ color: '#e53935', fontWeight: 'bold' }}>Rp {(item.jumlah - item.realisasi).toLocaleString('id-ID')}</Text>
+                                                    <Text style={{ color: '#e53935', fontWeight: 'bold' }}>Rp {formatRupiah(item.jumlah - item.realisasi)}</Text>
                                                 </View>
                                             </View>
                                         ))}
@@ -643,8 +758,16 @@ const TagihanScreen = () => {
                                     <Text style={{ textAlign: 'center', marginTop: 20 }}>Data tidak ditemukan</Text>
                                 )}
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, backgroundColor: '#236c30', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16 }}>
-                                    <Text style={{ fontWeight: 'bold', color: '#fff', fontSize: 16 }}>TOTAL</Text>
-                                    <Text style={{ fontWeight: 'bold', color: '#fff', fontSize: 16 }}>Rp {totalSpp.toLocaleString('id-ID')}</Text>
+                                    <Text style={{ fontWeight: 'bold', color: '#fff', fontSize: 16 }}>TOTAL SPP</Text>
+                                    <Text style={{ fontWeight: 'bold', color: '#fff', fontSize: 16 }}>Rp {formatRupiah(totalSpp)}</Text>
+                                </View>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, backgroundColor: '#236c30', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16 }}>
+                                    <Text style={{ fontWeight: 'bold', color: '#fff', fontSize: 16 }}>TOTAL BAYAR</Text>
+                                    <Text style={{ fontWeight: 'bold', color: '#fff', fontSize: 16 }}>Rp {formatRupiah(totalRealisasispp)}</Text>
+                                </View>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, backgroundColor: '#236c30', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16 }}>
+                                    <Text style={{ fontWeight: 'bold', color: '#fff', fontSize: 16 }}>TOTAL SISA</Text>
+                                    <Text style={{ fontWeight: 'bold', color: '#fff', fontSize: 16 }}>Rp {formatRupiah(totalSisaSpp)}</Text>
                                 </View>
                             </View>
                         </View>
@@ -657,6 +780,54 @@ const TagihanScreen = () => {
 };
 
 const styles = StyleSheet.create({
+    paymentCardModern: {
+        backgroundColor: '#fff',
+        borderRadius: 14,
+        padding: 16,
+        marginBottom: 14,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.09,
+        shadowRadius: 8,
+        elevation: 2,
+        borderWidth: 1,
+        borderColor: '#f0f0f0',
+    },
+    paymentNo: {
+        color: '#388e3c',
+        fontWeight: 'bold',
+        fontSize: 15,
+        letterSpacing: 1,
+    },
+    paymentDate: {
+        color: '#888',
+        fontSize: 13,
+    },
+    // paymentLabel: {
+    //     color: '#666',
+    //     fontWeight: '600',
+    //     minWidth: 80,
+    //     fontSize: 13,
+    // },
+    // paymentValue: {
+    //     color: '#14532d',
+    //     fontWeight: 'bold',
+    //     fontSize: 15,
+    //     marginLeft: 8,
+    // },
+    paymentKeterangan: {
+        color: '#333',
+        fontSize: 14,
+        marginLeft: 8,
+        flex: 1,
+        flexWrap: 'wrap',
+    },
+    paymentPetugas: {
+        color: '#388e3c',
+        fontWeight: '600',
+        fontSize: 13,
+        marginLeft: 8,
+    },
     paymentReceiptSchool: {
         fontWeight: 'bold',
         fontSize: 16,

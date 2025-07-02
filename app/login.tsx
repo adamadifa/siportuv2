@@ -139,14 +139,14 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [fieldError, setFieldError] = useState<{email?: string; password?: string}>({});
+  const [fieldError, setFieldError] = useState<{ email?: string; password?: string }>({});
   const router = useRouter();
 
   const handleLogin = async () => {
     setError('');
     setFieldError({});
     let valid = true;
-    let newFieldError: {email?: string; password?: string} = {};
+    let newFieldError: { email?: string; password?: string } = {};
     if (!email.trim()) {
       newFieldError.email = 'Email wajib diisi';
       valid = false;
@@ -169,7 +169,9 @@ export default function LoginScreen() {
       });
       const data = response.data;
       if (data.success) {
-        await AsyncStorage.setItem('token', data.data.token);
+        await AsyncStorage.setItem('token', response.data.data.token);
+        // Simpan data user ke AsyncStorage
+        await AsyncStorage.setItem('user', JSON.stringify(response.data.data.user));
         // Navigasi ke halaman utama (tabs)
         router.replace('/home');
       } else {
@@ -188,6 +190,7 @@ export default function LoginScreen() {
         text2: e.response?.data?.message || 'Cek koneksi internet Anda',
       });
       setError(e.response?.data?.message || 'Terjadi kesalahan jaringan');
+      console.log(e.response?.data?.message || 'Terjadi kesalahan jaringan');
     } finally {
       setLoading(false);
     }

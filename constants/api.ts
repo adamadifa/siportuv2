@@ -1,9 +1,10 @@
 import axios from 'axios';
 
 // Konfigurasi endpoint API utama
-export const BASE_URL = 'http://192.168.56.42:8000';
+export const BASE_URL = 'http://192.168.1.8:8000';
 
 export const LOGIN_ENDPOINT = BASE_URL + '/api/auth/login';
+export const REGISTER_ORANGTUA_ENDPOINT = BASE_URL + '/api/auth/register-orangtua';
 export const SISWA_ANAK_ENDPOINT = BASE_URL + '/api/siswa-anak';
 export const UNIT_ENDPOINT = BASE_URL + '/api/unit';
 
@@ -18,6 +19,28 @@ export async function fetchDataUnit(token: string) {
     return response.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || 'Gagal mengambil data unit');
+  }
+}
+
+// Registrasi Orang Tua
+export async function registerOrangtua({ name, email, password, password_confirmation, nik }: {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+  nik: string;
+}) {
+  try {
+    const response = await axios.post(REGISTER_ORANGTUA_ENDPOINT, {
+      name,
+      email,
+      password,
+      password_confirmation,
+      nik,
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Gagal registrasi orang tua');
   }
 }
 
@@ -118,5 +141,46 @@ export async function fetchRencanasppByKodeBiaya(token: string, kode_biaya: stri
     return response.data; // sesuai contoh, response berupa array
   } catch (error: any) {
     throw new Error(error.response?.data?.message || 'Gagal mengambil detail siswa');
+  }
+}
+
+export async function fetchHistoribayar(token: string, id_siswa: string) {
+  try {
+    const response = await axios.get(
+      BASE_URL + `/api/gethistoribayar-by-idsiswa`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+        params: {
+          id_siswa,
+        },
+      }
+    );
+    return response.data; // sesuai contoh, response berupa array
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Gagal mengambil detail siswa');
+  }
+}
+
+
+export async function fetchDetailHistoriBayar(token: string, no_bukti: string) {
+  try {
+    const response = await axios.get(
+      BASE_URL + `/api/getdetailhistoribayar`,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+        params: {
+          no_bukti,
+        },
+      }
+    );
+    return response.data; // sesuai contoh, response berupa array
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Gagal mengambil detail histori bayar');
   }
 }

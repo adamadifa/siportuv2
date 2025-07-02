@@ -2,12 +2,15 @@ import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
+// Pastikan TouchableOpacity sudah di-import
+
 import {
   ActivityIndicator, Dimensions, Image,
   SafeAreaView, ScrollView, StyleSheet, Text,
   TouchableOpacity, View
 } from 'react-native';
 import AnnouncementCard from '../components/AnnouncementCard';
+
 import { fetchDataSiswa } from '../constants/api';
 
 // Hapus siswaDummy, akan diganti dengan state
@@ -68,6 +71,7 @@ export default function HomeScreen() {
   const [siswa, setSiswa] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userInfo, setUserInfo] = useState<any>(null);
 
   React.useEffect(() => {
     const fetchSiswa = async () => {
@@ -76,6 +80,13 @@ export default function HomeScreen() {
         setError(null);
         const token = await AsyncStorage.getItem('token');
         if (!token) throw new Error('Token tidak ditemukan');
+        // Log token user yang sedang login
+        console.log('User token:', token);
+        // Ambil data user dari AsyncStorage
+        const userStr = await AsyncStorage.getItem('user');
+        if (userStr) {
+          setUserInfo(JSON.parse(userStr));
+        }
         const data = await fetchDataSiswa(token);
         //console.log('HASIL DATA SISWA:', data);
         setSiswa(data);
@@ -95,9 +106,22 @@ export default function HomeScreen() {
           <View style={styles.headerRow}>
             <Image source={require('../assets/images/logo.png')} style={styles.logoSmall} />
             <View style={{ flex: 1, marginLeft: 10 }}>
-              <Text style={styles.welcome}>Selamat datang,</Text>
-              <Text style={styles.parentName}>Fitriani Nur Hidayah</Text>
+              <Text style={styles.welcome}>Assalamualaikum,</Text>
+              <Text style={styles.parentName}>
+                Bapak / Ibu {userInfo ? userInfo.name : ''}
+              </Text>
             </View>
+            <TouchableOpacity
+              onPress={async () => {
+                await AsyncStorage.removeItem('token');
+                await AsyncStorage.removeItem('user');
+                router.replace('/login');
+              }}
+              style={{ padding: 8, marginLeft: 8 }}
+              accessibilityLabel="Logout"
+            >
+              <Feather name="log-out" size={24} color="#e53935" />
+            </TouchableOpacity>
           </View>
           <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
             {/* Panel Siswa */}
@@ -200,7 +224,7 @@ export default function HomeScreen() {
                 </View>
                 <View style={{ marginHorizontal: 18, marginTop: 0, position: 'relative', paddingLeft: 0 }}>
                   {/* Timeline vertical line */}
-                 
+
                   {pengumumanDummy.map((item, idx) => {
                     const [tgl, bln] = item.tanggal.split(' ');
                     // Badge warna

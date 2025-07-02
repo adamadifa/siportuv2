@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import React from 'react';
+import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 // Props: activeTab (string), onTabPress (function)
 const tabs = [
@@ -52,7 +52,7 @@ const BottomNavigation = ({ activeTab, onTabPress }: {
                 } else if (tab.key === 'tagihan') {
                   router.push('/tagihan');
                 } else if (tab.key === 'profil') {
-                  router.push('/profil');
+                  // router.push('/profil');
                 } else {
                   alert('Navigasi ke halaman "' + tab.key + '" belum diimplementasikan.');
                 }
@@ -62,7 +62,7 @@ const BottomNavigation = ({ activeTab, onTabPress }: {
             {tab.icon(isActive ? '#388e3c' : '#888')}
           </TouchableOpacity>
         );
-      })} 
+      })}
     </View>
   );
 };
