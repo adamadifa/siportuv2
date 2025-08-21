@@ -15,15 +15,15 @@ const lottieFiles = [
 const steps = [
   {
     title: 'Selamat Datang',
-    description: 'Terima kasih telah menggunakan SIPORTU! Aplikasi modern untuk kebutuhan kampus Anda.',
+    description: 'Terima kasih telah menggunakan SIPORTU! Aplikasi modern untuk Memonitoring Santri',
   },
   {
     title: 'Fitur Tagihan',
-    description: 'Pantau dan kelola semua tagihan akademik Anda dengan mudah dan transparan.',
+    description: 'Pantau dan kelola semua tagihan akademik  dengan mudah dan transparan.',
   },
   {
     title: 'Fitur Presensi',
-    description: 'Presensi jadi lebih praktis dan efisien langsung dari aplikasi SIPORTU.',
+    description: 'Pantau kehadiran santri secara realtime dan akurat. ',
   },
 ];
 
@@ -40,7 +40,11 @@ const IntroductionScreen: React.FC<IntroductionScreenProps> = ({ onFinish }) => 
       setStep(step + 1);
       flatListRef.current?.scrollToIndex({ index: step + 1 });
     } else {
-      onFinish();
+      // Immediately call onFinish without any delay
+      // Use requestAnimationFrame to ensure smooth transition
+      requestAnimationFrame(() => {
+        onFinish();
+      });
     }
   };
 

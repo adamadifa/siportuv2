@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 interface AnnouncementCardProps {
   date: string;
@@ -9,21 +10,7 @@ interface AnnouncementCardProps {
   category: string;
   categoryColor: string;
   content: string;
-}
-
-import React from 'react';
-import { Text, View } from 'react-native';
-
-
-interface AnnouncementCardProps {
-  date: string;
-  month: string;
-  time: string;
-  title: string;
-  location: string;
-  category: string;
-  categoryColor: string;
-  content: string;
+  onPress?: () => void;
 }
 
 export default function AnnouncementCard({
@@ -35,9 +22,14 @@ export default function AnnouncementCard({
   category,
   categoryColor,
   content,
+  onPress,
 }: AnnouncementCardProps) {
   return (
-    <View style={{ flexDirection: 'row', backgroundColor: '#fff', borderRadius: 16, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 2, padding: 14, alignItems: 'center' }}>
+    <TouchableOpacity
+      style={{ flexDirection: 'row', backgroundColor: '#fff', borderRadius: 16, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 2, padding: 14, alignItems: 'center' }}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       {/* Tanggal & Bulan */}
       <View style={{ alignItems: 'center', marginRight: 16, minWidth: 46 }}>
         <Text style={{ fontSize: 32, fontWeight: 'bold', color: '#18492b', lineHeight: 36 }}>{date}</Text>
@@ -58,7 +50,7 @@ export default function AnnouncementCard({
         </View>
         <Text style={{ color: '#18492b', fontSize: 14, marginTop: 2 }}>{content}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

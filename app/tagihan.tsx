@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams } from 'expo-router';
 import { Skeleton } from 'moti/skeleton';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Image, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import {

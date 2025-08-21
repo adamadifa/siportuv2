@@ -9,9 +9,9 @@ import {
   SafeAreaView, ScrollView, StyleSheet, Text,
   TouchableOpacity, View
 } from 'react-native';
-import AnnouncementCard from '../components/AnnouncementCard';
 
-import { fetchDataSiswa } from '../constants/api';
+import AnnouncementCard from '../components/AnnouncementCard';
+import { fetchDataSiswa, fetchPengumumanTerbaru } from '../constants/api';
 
 // Hapus siswaDummy, akan diganti dengan state
 
@@ -24,40 +24,7 @@ const menuDummy = [
   { icon: 'bell', label: 'Pengumuman', color: '#388e3c' },
 ];
 
-const pengumumanDummy = [
-  {
-    id: 1,
-    judul: 'Pembayaran UKT',
-    isi: 'Segera lakukan pembayaran UKT semester ganjil.',
-    tanggal: '26 Jun 2025',
-    kategori: 'keuangan',
-    lokasi: 'Bank Syariah Mandiri, Kampus Pusat',
-  },
-  {
-    id: 2,
-    judul: 'Jadwal Ujian',
-    isi: 'Ujian akhir semester akan dimulai minggu depan.',
-    tanggal: '27 Jun 2025',
-    kategori: 'akademik',
-    lokasi: 'Gedung Serbaguna Lt 2',
-  },
-  {
-    id: 3,
-    judul: 'Libur Akhir Semester',
-    tanggal: '25 Juni 2025',
-    isi: 'Sekolah libur mulai 26 Juni hingga 10 Juli 2025. Selamat berlibur!',
-    kategori: 'liburan',
-    lokasi: 'Seluruh sekolah',
-  },
-  {
-    id: 4,
-    judul: 'Pengambilan Raport',
-    tanggal: '18 Juni 2025',
-    isi: 'Pengambilan raport dilakukan pada tanggal 27 Juni 2025 di ruang kelas masing-masing.',
-    kategori: 'akademik',
-    lokasi: 'Ruang kelas masing-masing',
-  },
-];
+
 
 const { width } = Dimensions.get('window');
 
@@ -72,6 +39,11 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userInfo, setUserInfo] = useState<any>(null);
+
+  // State untuk data pengumuman
+  const [pengumuman, setPengumuman] = useState<any[]>([]);
+  const [loadingPengumuman, setLoadingPengumuman] = useState(true);
+  const [errorPengumuman, setErrorPengumuman] = useState<string | null>(null);
 
   React.useEffect(() => {
     const fetchSiswa = async () => {
@@ -96,7 +68,28 @@ export default function HomeScreen() {
         setLoading(false);
       }
     };
+
+    const fetchPengumuman = async () => {
+      try {
+        setLoadingPengumuman(true);
+        setErrorPengumuman(null);
+        const data = await fetchPengumumanTerbaru();
+        console.log('HASIL DATA PENGUMUMAN:', data);
+        if (data.success && data.data) {
+          setPengumuman(data.data);
+        } else {
+          setPengumuman([]);
+        }
+      } catch (err: any) {
+        setErrorPengumuman(err.message || 'Gagal mengambil data pengumuman');
+        setPengumuman([]);
+      } finally {
+        setLoadingPengumuman(false);
+      }
+    };
+
     fetchSiswa();
+    fetchPengumuman();
   }, []);
 
   return (
@@ -188,27 +181,42 @@ export default function HomeScreen() {
                 </ScrollView>
                 {/* Grid Menu */}
                 <View style={styles.menuGrid}>
-                  {menuDummy.map((m, idx) => (
-                    <TouchableOpacity
-                      style={styles.menuItem}
-                      key={idx}
-                      activeOpacity={0.8}
-                      onPress={() => {
-                        console.log('ACTIVE INDEX:', activeIndex);
-                        console.log('ACTIVE SISWA:', siswa[activeIndex].id_siswa);
-                        if (m.label === 'Tagihan') {
-                          const siswaAktif = siswa[activeIndex];
-                          router.push({ pathname: '/tagihan', params: { id_siswa: siswaAktif.id_siswa } });
-                        }
-                        // Tambahkan navigasi lain jika perlu
-                      }}
-                    >
-                      <View style={[styles.menuIconCircle, { backgroundColor: m.color + '22' }]}>
-                        <Feather name={m.icon as any} size={28} color={m.color} />
-                      </View>
-                      <Text style={styles.menuLabel}>{m.label}</Text>
-                    </TouchableOpacity>
-                  ))}
+                  {menuDummy.map((m, idx) => {
+                    const isComingSoon = ['Tabungan', 'Raport', 'Laporan'].includes(m.label);
+
+                    return (
+                      <TouchableOpacity
+                        style={[styles.menuItem, isComingSoon && styles.menuItemComingSoon]}
+                        key={idx}
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          if (isComingSoon) {
+                            // Tampilkan alert atau toast untuk coming soon
+                            alert('Fitur ini akan segera hadir!');
+                            return;
+                          }
+
+                          console.log('ACTIVE INDEX:', activeIndex);
+                          console.log('ACTIVE SISWA:', siswa[activeIndex].id_siswa);
+                          if (m.label === 'Tagihan') {
+                            const siswaAktif = siswa[activeIndex];
+                            router.push({ pathname: '/tagihan', params: { id_siswa: siswaAktif.id_siswa } });
+                          }
+                          // Tambahkan navigasi lain jika perlu
+                        }}
+                      >
+                        <View style={[styles.menuIconCircle, { backgroundColor: m.color + '22' }]}>
+                          <Feather name={m.icon as any} size={28} color={isComingSoon ? '#ccc' : m.color} />
+                        </View>
+                        <Text style={[styles.menuLabel, isComingSoon && styles.menuLabelComingSoon]}>{m.label}</Text>
+                        {isComingSoon && (
+                          <View style={styles.comingSoonBadge}>
+                            <Text style={styles.comingSoonText}>Coming Soon</Text>
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
                 </View>
                 {/* Section Pengumuman */}
                 <View style={[styles.sectionPengumuman, { justifyContent: 'space-between' }]}>
@@ -218,34 +226,65 @@ export default function HomeScreen() {
                     </View>
                     <Text style={[styles.pengumumanTitle, { color: '#14532d', fontWeight: 'bold', fontSize: 17, letterSpacing: 0.2 }]}>Pengumuman</Text>
                   </View>
-                  <TouchableOpacity style={{ paddingHorizontal: 6, paddingVertical: 2, marginLeft: 8, alignSelf: 'center' }} activeOpacity={0.7}>
+                  <TouchableOpacity
+                    style={{ paddingHorizontal: 6, paddingVertical: 2, marginLeft: 8, alignSelf: 'center' }}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      // Untuk sementara, navigasi ke pengumuman pertama jika ada
+                      if (pengumuman.length > 0) {
+                        router.push({
+                          pathname: '/detail-pengumuman',
+                          params: { id: pengumuman[0].id.toString() }
+                        });
+                      }
+                    }}
+                  >
                     <Text style={{ color: '#388e3c', fontWeight: 'bold', fontSize: 13 }}>Lihat Semua</Text>
                   </TouchableOpacity>
                 </View>
                 <View style={{ marginHorizontal: 18, marginTop: 0, position: 'relative', paddingLeft: 0 }}>
                   {/* Timeline vertical line */}
+                  {loadingPengumuman ? (
+                    <ActivityIndicator size="small" color="#388e3c" style={{ marginTop: 20 }} />
+                  ) : errorPengumuman ? (
+                    <Text style={{ color: 'red', margin: 20, textAlign: 'center' }}>{errorPengumuman}</Text>
+                  ) : pengumuman.length === 0 ? (
+                    <Text style={{ color: '#888', margin: 20, textAlign: 'center' }}>Tidak ada pengumuman terbaru.</Text>
+                  ) : (
+                    pengumuman.map((item, idx) => {
+                      // Parse tanggal dengan lebih aman
+                      const tanggalParts = item.tanggal ? item.tanggal.split(' ') : ['01', 'Jan'];
+                      const tgl = tanggalParts[0] || '01';
+                      const bln = tanggalParts[1] || 'Jan';
 
-                  {pengumumanDummy.map((item, idx) => {
-                    const [tgl, bln] = item.tanggal.split(' ');
-                    // Badge warna
-                    let categoryColor = '#e0e0e0';
-                    if (item.kategori === 'keuangan') categoryColor = '#e3f2fd';
-                    else if (item.kategori === 'akademik') categoryColor = '#fffde7';
-                    return (
-                      <View key={item.id} style={{ marginBottom: 10 }}>
-                        <AnnouncementCard
-                          date={tgl}
-                          month={bln}
-                          time="08.00"
-                          title={item.judul}
-                          location={item.lokasi || 'Lokasi acara belum ditentukan'}
-                          category={item.kategori}
-                          categoryColor={categoryColor}
-                          content={item.isi}
-                        />
-                      </View>
-                    );
-                  })}
+                      // Badge warna
+                      let categoryColor = '#e0e0e0';
+                      if (item.kategori === 'keuangan') categoryColor = '#e3f2fd';
+                      else if (item.kategori === 'akademik') categoryColor = '#fffde7';
+                      else if (item.kategori === 'liburan') categoryColor = '#fff3e0';
+
+                      return (
+                        <View key={item.id} style={{ marginBottom: 10 }}>
+                          <AnnouncementCard
+                            date={tgl}
+                            month={bln}
+                            time="08.00"
+                            title={item.judul}
+                            location={item.lokasi || 'Lokasi acara belum ditentukan'}
+                            category={item.kategori}
+                            categoryColor={categoryColor}
+                            content={item.isi}
+                            onPress={() => {
+                              router.push({
+                                pathname: '/detail-pengumuman',
+                                params: { id: item.id.toString() }
+                              });
+                            }}
+                          />
+                        </View>
+                      );
+                    })
+                  )}
                 </View>
               </>
             )}
@@ -491,6 +530,26 @@ const styles = StyleSheet.create({
     color: '#18492b',
     fontWeight: 'bold',
     marginTop: 1,
+  },
+  menuItemComingSoon: {
+    opacity: 0.6,
+  },
+  menuLabelComingSoon: {
+    color: '#999',
+  },
+  comingSoonBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#ff6b35',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  comingSoonText: {
+    fontSize: 8,
+    color: '#fff',
+    fontWeight: 'bold',
   },
   sectionPengumuman: {
     flexDirection: 'row',
