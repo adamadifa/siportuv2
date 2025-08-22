@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 // Konfigurasi endpoint API utama
-//export const BASE_URL = 'https://siprenpas.my.id';
-export const BASE_URL = 'http://10.43.136.42';
+export const BASE_URL = 'https://siprenpas.my.id';
+//export const BASE_URL = 'http://10.43.136.42';
 
 export const LOGIN_ENDPOINT = BASE_URL + '/api/auth/login';
 export const REGISTER_ORANGTUA_ENDPOINT = BASE_URL + '/api/auth/register-orangtua';

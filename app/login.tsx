@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { useRouter } from 'expo-router';
@@ -141,6 +141,15 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const [fieldError, setFieldError] = useState<{ email?: string; password?: string }>({});
   const router = useRouter();
+
+  // Console log when login screen mounts
+  useEffect(() => {
+    console.log('🔑 LOGIN SCREEN: Component mounted and rendered');
+    console.log('🔑 LOGIN SCREEN: Timestamp:', new Date().toISOString());
+    return () => {
+      console.log('🔑 LOGIN SCREEN: Component unmounted');
+    };
+  }, []);
 
   const handleLogin = async () => {
     setError('');

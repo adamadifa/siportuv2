@@ -35,16 +35,21 @@ const IntroductionScreen: React.FC<IntroductionScreenProps> = ({ onFinish }) => 
   const [step, setStep] = useState(0);
   const flatListRef = useRef<FlatList>(null);
 
+  // Console log when intro screen mounts
+  React.useEffect(() => {
+    console.log('📖 INTRODUCTION SCREEN: Component mounted and rendered');
+    return () => {
+      console.log('📖 INTRODUCTION SCREEN: Component unmounted');
+    };
+  }, []);
+
   const handleNext = () => {
     if (step < steps.length - 1) {
       setStep(step + 1);
       flatListRef.current?.scrollToIndex({ index: step + 1 });
     } else {
       // Immediately call onFinish without any delay
-      // Use requestAnimationFrame to ensure smooth transition
-      requestAnimationFrame(() => {
-        onFinish();
-      });
+      onFinish();
     }
   };
 

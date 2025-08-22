@@ -34,6 +34,14 @@ export default function HomeScreen() {
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
 
+  // Console log when home screen mounts
+  React.useEffect(() => {
+    console.log('🏠 HOME SCREEN: Component mounted and rendered');
+    return () => {
+      console.log('🏠 HOME SCREEN: Component unmounted');
+    };
+  }, []);
+
   // State untuk data siswa, loading, dan error
   const [siswa, setSiswa] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

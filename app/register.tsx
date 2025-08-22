@@ -1,7 +1,7 @@
 import { registerOrangtua } from '@/constants/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Toast, { BaseToastProps } from 'react-native-toast-message';
 import { CustomToast } from '../components/CustomToast';
@@ -17,6 +17,14 @@ export default function RegisterScreen() {
   });
   const [fieldError, setFieldError] = useState<{ [k: string]: string }>({});
   const [loading, setLoading] = useState(false);
+
+  // Console log when register screen mounts
+  useEffect(() => {
+    console.log('📝 REGISTER SCREEN: Component mounted and rendered');
+    return () => {
+      console.log('📝 REGISTER SCREEN: Component unmounted');
+    };
+  }, []);
 
   const handleChange = (key: string, value: string) => {
     setForm({ ...form, [key]: value });

@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, StyleSheet, Animated, Easing } from 'react-native';
 import { Image } from 'expo-image';
+import React from 'react';
+import { Animated, Easing, StyleSheet, View } from 'react-native';
 
 const AnimatedLogo = () => {
   // Bouncing logo
@@ -103,6 +103,14 @@ const AnimatedLogo = () => {
 };
 
 const SplashScreen = () => {
+  // Console log when splash screen mounts
+  React.useEffect(() => {
+    console.log('💦 SPLASH SCREEN: Component mounted and rendered');
+    return () => {
+      console.log('💦 SPLASH SCREEN: Component unmounted');
+    };
+  }, []);
+
   return (
     <View style={styles.container}>
       <AnimatedLogo />
