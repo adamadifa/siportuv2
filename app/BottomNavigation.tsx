@@ -1,6 +1,7 @@
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import React from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+
+import { useRouter } from 'expo-router';
 
 // Props: activeTab (string), onTabPress (function)
 const tabs = [
@@ -26,8 +27,6 @@ const tabs = [
   },
 ];
 
-import { useRouter } from 'expo-router';
-
 const BottomNavigation = ({ activeTab, onTabPress }: {
   activeTab: string,
   onTabPress?: (tabKey: string) => void,
@@ -50,9 +49,9 @@ const BottomNavigation = ({ activeTab, onTabPress }: {
                 if (tab.key === 'home') {
                   router.push('/home');
                 } else if (tab.key === 'tagihan') {
-                  router.push('/tagihan');
+                  alert('Menu Tagihan akan segera hadir!');
                 } else if (tab.key === 'profil') {
-                  // router.push('/profil');
+                  router.push('/profil');
                 } else {
                   alert('Navigasi ke halaman "' + tab.key + '" belum diimplementasikan.');
                 }

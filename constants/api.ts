@@ -6,6 +6,7 @@ export const BASE_URL = 'https://siprenpas.my.id';
 
 export const LOGIN_ENDPOINT = BASE_URL + '/api/auth/login';
 export const REGISTER_ORANGTUA_ENDPOINT = BASE_URL + '/api/auth/register-orangtua';
+export const CHANGE_PASSWORD_ENDPOINT = BASE_URL + '/api/auth/change-password';
 export const SISWA_ANAK_ENDPOINT = BASE_URL + '/api/siswa-anak';
 export const UNIT_ENDPOINT = BASE_URL + '/api/unit';
 export const PENGUMUMAN_TERBARU_ENDPOINT = BASE_URL + '/api/pengumuman/terbaru';
@@ -84,6 +85,11 @@ export async function fetchDataSiswa(token: string) {
 
 export async function fetchSiswaById(token: string, id_siswa: string) {
   try {
+    console.log('🌐 API: fetchSiswaById called');
+    console.log('🌐 API: token =', token ? 'Token provided' : 'No token');
+    console.log('🌐 API: id_siswa =', id_siswa);
+    console.log('🌐 API: URL =', BASE_URL + `/api/siswa-by-idsiswa`);
+    
     const response = await axios.get(
       BASE_URL + `/api/siswa-by-idsiswa`,
       {
@@ -96,8 +102,19 @@ export async function fetchSiswaById(token: string, id_siswa: string) {
         },
       }
     );
+    
+    console.log('🌐 API: Response received');
+    console.log('🌐 API: Response status =', response.status);
+    console.log('🌐 API: Response data =', response.data);
+    console.log('🌐 API: Response data type =', typeof response.data);
+    console.log('🌐 API: Response data length =', response.data ? response.data.length : 'data is null/undefined');
+    
     return response.data; // sesuai contoh, response berupa array
   } catch (error: any) {
+    console.log('❌ API: Error in fetchSiswaById');
+    console.log('❌ API: Error =', error);
+    console.log('❌ API: Error response =', error.response);
+    console.log('❌ API: Error message =', error.message);
     throw new Error(error.response?.data?.message || 'Gagal mengambil detail siswa');
   }
 }
@@ -126,7 +143,7 @@ export async function fetchBiayaByNoPendaftaran(token: string, no_pendaftaran: s
 
 
 
-export async function fetchRencanasppByKodeBiaya(token: string, kode_biaya: string) {
+export async function fetchRencanasppByKodeBiaya(token: string, kode_biaya: string,no_pendaftaran:string) {
   try {
     const response = await axios.get(
       BASE_URL + `/api/getrencanaspp-by-kodebiaya`,
@@ -137,6 +154,7 @@ export async function fetchRencanasppByKodeBiaya(token: string, kode_biaya: stri
         },
         params: {
           kode_biaya,
+          no_pendaftaran,
         },
       }
     );
@@ -212,5 +230,29 @@ export async function fetchDetailPengumuman(id: number) {
     return response.data;
   } catch (error: any) {
     throw new Error(error.response?.data?.message || 'Gagal mengambil detail pengumuman');
+  }
+}
+
+// Change Password
+export async function changePassword(token: string, { current_password, new_password, new_password_confirmation }: {
+  current_password: string;
+  new_password: string;
+  new_password_confirmation: string;
+}) {
+  try {
+    const response = await axios.post(CHANGE_PASSWORD_ENDPOINT, {
+      current_password,
+      new_password,
+      new_password_confirmation,
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Gagal mengubah password');
   }
 }

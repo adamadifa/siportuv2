@@ -144,6 +144,10 @@ export default function RootLayout() {
         <Stack.Screen name="register" options={{ headerShown: false }} />
         <Stack.Screen name="tagihan" options={{ headerShown: false }} />
         <Stack.Screen name="home" options={{ headerShown: false }} />
+        <Stack.Screen name="profil" options={{ headerShown: false }} />
+        <Stack.Screen name="ubah-password" options={{ headerShown: false }} />
+        <Stack.Screen name="presensi" options={{ headerShown: false }} />
+        <Stack.Screen name="profil-siswa" options={{ headerShown: false }} />
         <Stack.Screen name="detail-pengumuman" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>

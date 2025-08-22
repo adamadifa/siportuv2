@@ -2,6 +2,7 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { Skeleton } from 'moti/skeleton';
 import { useEffect, useState } from 'react';
 import { Image, Modal, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -310,7 +311,7 @@ const TagihanScreen = () => {
                     setLoadingRencanaspp(false);
                     return;
                 }
-                const data = await fetchRencanasppByKodeBiaya(token, selectedKodebiaya);
+                const data = await fetchRencanasppByKodeBiaya(token, selectedKodebiaya,selectedUnit);
                 //console.log(data);
                 setRencanasppList(data);
             } catch (err) {
@@ -390,7 +391,8 @@ const TagihanScreen = () => {
     const totalSisa = totalTagihan - parseInt(totalBayar);
 
     return (
-        <View style={{ flex: 1, backgroundColor: '#f8f8f8' }}>
+        <View style={{ flex: 1, backgroundColor: '#f5f6fa' }}>
+            <StatusBar style="dark" />
             <SafeAreaView style={{ flex: 1 }}>
                 <View style={{ paddingHorizontal: 10, paddingBottom: 10 }}>
 

@@ -4,14 +4,16 @@ import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 // Pastikan TouchableOpacity sudah di-import
 
+import { StatusBar } from 'expo-status-bar';
 import {
-  ActivityIndicator, Dimensions, Image,
-  SafeAreaView, ScrollView, StyleSheet, Text,
-  TouchableOpacity, View
+    ActivityIndicator, Dimensions, Image,
+    SafeAreaView, ScrollView, StyleSheet, Text,
+    TouchableOpacity, View
 } from 'react-native';
 
 import AnnouncementCard from '../components/AnnouncementCard';
 import { fetchDataSiswa, fetchPengumumanTerbaru } from '../constants/api';
+import BottomNavigation from './BottomNavigation';
 
 // Hapus siswaDummy, akan diganti dengan state
 
@@ -102,6 +104,7 @@ export default function HomeScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#f8f8f8' }}>
+      <StatusBar style="dark" />
       <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.container}>
           <View style={styles.headerRow}>
@@ -124,7 +127,7 @@ export default function HomeScreen() {
               <Feather name="log-out" size={24} color="#e53935" />
             </TouchableOpacity>
           </View>
-          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
+          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 80 }}>
             {/* Panel Siswa */}
             {loading ? (
               <ActivityIndicator size="large" color="#388e3c" style={{ marginTop: 30 }} />
@@ -148,7 +151,25 @@ export default function HomeScreen() {
                 >
 
                   {siswa.map((s, idx) => (
-                    <View style={[siswa.length === 1 ? styles.siswaPanelSingle : styles.siswaPanelMulti, styles.siswaPanel]} key={s.id_siswa ? `siswa-${s.id_siswa}` : `idx-${idx}`}>
+                    <TouchableOpacity
+                      key={s.id_siswa ? `siswa-${s.id_siswa}` : `idx-${idx}`}
+                      style={[siswa.length === 1 ? styles.siswaPanelSingle : styles.siswaPanelMulti, styles.siswaPanel]}
+                      activeOpacity={0.9}
+                      onPress={() => {
+                        console.log('🏠 HOME: Card siswa clicked');
+                        console.log('🏠 HOME: s.id_siswa =', s.id_siswa);
+                        console.log('🏠 HOME: s =', s);
+                        if (s.id_siswa) {
+                          console.log('🏠 HOME: Navigating to profil-siswa with id_siswa =', s.id_siswa);
+                          router.push({
+                            pathname: '/profil-siswa',
+                            params: { id_siswa: s.id_siswa }
+                          });
+                        } else {
+                          console.log('❌ HOME: s.id_siswa is null or undefined');
+                        }
+                      }}
+                    >
                       {/* Ornamen lingkaran besar kanan bawah */}
                       <View style={styles.ornamenCircle} pointerEvents="none" />
                       {/* Ornamen gradient kiri atas */}
@@ -157,7 +178,23 @@ export default function HomeScreen() {
                         <View style={styles.inisialCircle}>
                           <Text style={styles.inisialText}>{s.nama_lengkap ? s.nama_lengkap.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase() : '-'}</Text>
                         </View>
-                        <TouchableOpacity style={styles.arrowBtn}>
+                        <TouchableOpacity 
+                          style={styles.arrowBtn}
+                          onPress={(e) => {
+                            console.log('🏠 HOME: Arrow button clicked');
+                            console.log('🏠 HOME: s.id_siswa =', s.id_siswa);
+                            e.stopPropagation();
+                            if (s.id_siswa) {
+                              console.log('🏠 HOME: Navigating to profil-siswa with id_siswa =', s.id_siswa);
+                              router.push({
+                                pathname: '/profil-siswa',
+                                params: { id_siswa: s.id_siswa }
+                              });
+                            } else {
+                              console.log('❌ HOME: s.id_siswa is null or undefined');
+                            }
+                          }}
+                        >
                           <Feather name="chevron-right" size={20} color="#fff" style={{ opacity: 0.7 }} />
                         </TouchableOpacity>
                       </View>
@@ -184,7 +221,7 @@ export default function HomeScreen() {
                           </Text>
                         </View>
                       </View>
-                    </View>
+                    </TouchableOpacity>
                   ))}
                 </ScrollView>
                 {/* Grid Menu */}
@@ -209,6 +246,8 @@ export default function HomeScreen() {
                           if (m.label === 'Tagihan') {
                             const siswaAktif = siswa[activeIndex];
                             router.push({ pathname: '/tagihan', params: { id_siswa: siswaAktif.id_siswa } });
+                          } else if (m.label === 'Presensi') {
+                            router.push('/presensi');
                           }
                           // Tambahkan navigasi lain jika perlu
                         }}
@@ -299,6 +338,7 @@ export default function HomeScreen() {
 
           </ScrollView>
         </View>
+        <BottomNavigation activeTab="home" />
       </SafeAreaView>
     </View>
   );

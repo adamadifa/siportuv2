@@ -1,5 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import {
     Dimensions,
@@ -12,6 +13,7 @@ import {
 } from 'react-native';
 
 import { fetchDetailPengumuman } from '../constants/api';
+import BottomNavigation from './BottomNavigation';
 
 const { width } = Dimensions.get('window');
 
@@ -162,8 +164,9 @@ export default function DetailPengumumanScreen() {
 
     return (
         <View style={styles.container}>
+            <StatusBar style="light" />
             <SafeAreaView style={styles.safeArea}>
-                <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+                <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 80 }}>
                     {/* Hero Section */}
                     <View style={styles.heroSection}>
                         <View style={styles.heroBackground} />
@@ -230,6 +233,7 @@ export default function DetailPengumumanScreen() {
                         </View>
                     </View>
                 </ScrollView>
+                <BottomNavigation activeTab="home" />
             </SafeAreaView>
         </View>
     );

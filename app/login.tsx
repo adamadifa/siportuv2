@@ -1,12 +1,13 @@
 import { Feather } from '@expo/vector-icons';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, Pressable, Text as RNText, TouchableOpacity as RNTouchableOpacity, View as RNView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { useRouter } from 'expo-router';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { Text as RNText, TouchableOpacity as RNTouchableOpacity, View as RNView } from 'react-native';
+
 import Toast from 'react-native-toast-message';
 import { LOGIN_ENDPOINT } from '../constants/api';
 
@@ -207,6 +208,7 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar style="dark" />
       <View style={styles.logoWrapper}>
         <Image source={require('../assets/images/logo.png')} style={styles.logo} />
       </View>
