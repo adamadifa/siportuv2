@@ -4,13 +4,13 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 import BottomNavigation from './BottomNavigation';
@@ -22,7 +22,7 @@ export default function ProfilScreen() {
 
   useEffect(() => {
     console.log('👤 PROFIL SCREEN: Component mounted and rendered');
-    
+
     const loadUserInfo = async () => {
       try {
         const userStr = await AsyncStorage.getItem('user');
@@ -65,21 +65,21 @@ export default function ProfilScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.contentContainer}>
+          {/* Header dengan background hijau */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.push('/home')}
+            >
+              <Feather name="arrow-left" size={24} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Profil</Text>
+            <View style={{ width: 24 }} />
+          </View>
           <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-            {/* Header */}
-            <View style={styles.header}>
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => router.push('/home')}
-              >
-                <Feather name="arrow-left" size={24} color="#18492b" />
-              </TouchableOpacity>
-              <Text style={styles.headerTitle}>Profil</Text>
-              <View style={{ width: 24 }} />
-            </View>
 
             {/* Profile Card */}
             <View style={styles.profileCard}>
@@ -161,20 +161,20 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    backgroundColor: '#14532d', // Background hijau untuk status bar area
   },
   contentContainer: {
     flex: 1,
-    paddingTop: 40,
   },
   scrollView: {
     flex: 1,
+    backgroundColor: '#f5f6fa',
   },
   header: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    paddingVertical: 20,
+    paddingTop: 50, // Extra padding untuk status bar
+    backgroundColor: '#14532d', // Background hijau seperti card siswa
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#18492b',
+    color: '#fff', // Warna putih untuk kontras dengan background hijau
     flex: 1,
     textAlign: 'center',
   },

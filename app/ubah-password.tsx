@@ -4,15 +4,15 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 import { changePassword } from '../constants/api';
@@ -24,14 +24,14 @@ export default function UbahPasswordScreen() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const [form, setForm] = useState({
     current_password: '',
     new_password: '',
     new_password_confirmation: ''
   });
-  
-  const [errors, setErrors] = useState<{[key: string]: string}>({});
+
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const handleChange = (key: string, value: string) => {
     setForm(prev => ({ ...prev, [key]: value }));
@@ -42,7 +42,7 @@ export default function UbahPasswordScreen() {
   };
 
   const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
+    const newErrors: { [key: string]: string } = {};
 
     if (!form.current_password.trim()) {
       newErrors.current_password = 'Password saat ini wajib diisi';
@@ -99,21 +99,20 @@ export default function UbahPasswordScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.contentContainer}>
-          {/* Fixed Header */}
+          {/* Header dengan background hijau */}
           <View style={styles.header}>
             <TouchableOpacity
               style={styles.backButton}
               onPress={() => router.back()}
             >
-              <Feather name="arrow-left" size={24} color="#18492b" />
+              <Feather name="arrow-left" size={24} color="#fff" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Ubah Password</Text>
             <View style={{ width: 24 }} />
           </View>
-
           {/* Scrollable Content */}
           <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
             {/* Form Card */}
@@ -144,10 +143,10 @@ export default function UbahPasswordScreen() {
                     style={styles.eyeButton}
                     onPress={() => setShowCurrentPassword(!showCurrentPassword)}
                   >
-                    <Feather 
-                      name={showCurrentPassword ? 'eye' : 'eye-off'} 
-                      size={20} 
-                      color="#666" 
+                    <Feather
+                      name={showCurrentPassword ? 'eye' : 'eye-off'}
+                      size={20}
+                      color="#666"
                     />
                   </TouchableOpacity>
                 </View>
@@ -172,10 +171,10 @@ export default function UbahPasswordScreen() {
                     style={styles.eyeButton}
                     onPress={() => setShowNewPassword(!showNewPassword)}
                   >
-                    <Feather 
-                      name={showNewPassword ? 'eye' : 'eye-off'} 
-                      size={20} 
-                      color="#666" 
+                    <Feather
+                      name={showNewPassword ? 'eye' : 'eye-off'}
+                      size={20}
+                      color="#666"
                     />
                   </TouchableOpacity>
                 </View>
@@ -200,10 +199,10 @@ export default function UbahPasswordScreen() {
                     style={styles.eyeButton}
                     onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    <Feather 
-                      name={showConfirmPassword ? 'eye' : 'eye-off'} 
-                      size={20} 
-                      color="#666" 
+                    <Feather
+                      name={showConfirmPassword ? 'eye' : 'eye-off'}
+                      size={20}
+                      color="#666"
                     />
                   </TouchableOpacity>
                 </View>
@@ -269,20 +268,19 @@ const styles = StyleSheet.create({
   },
   safeArea: {
     flex: 1,
+    backgroundColor: '#14532d', // Background hijau untuk status bar area
   },
   contentContainer: {
     flex: 1,
-    paddingTop: 40,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    paddingVertical: 20,
+    paddingTop: 50, // Extra padding untuk status bar
+    backgroundColor: '#14532d', // Background hijau seperti card siswa
     zIndex: 1000,
   },
   backButton: {
@@ -291,12 +289,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#18492b',
+    color: '#fff', // Warna putih untuk kontras dengan background hijau
     flex: 1,
     textAlign: 'center',
   },
   scrollView: {
     flex: 1,
+    backgroundColor: '#f5f6fa',
   },
   formCard: {
     backgroundColor: '#fff',
