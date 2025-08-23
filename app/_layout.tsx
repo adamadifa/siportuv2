@@ -5,6 +5,7 @@ import { Stack, useRouter } from 'expo-router';
 import * as ExpoSplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 
@@ -137,21 +138,23 @@ export default function RootLayout() {
   console.log('🚀 LAYOUT: Rendering Main App (Stack Navigation)');
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-        <Stack.Screen name="register" options={{ headerShown: false }} />
-        <Stack.Screen name="tagihan" options={{ headerShown: false }} />
-        <Stack.Screen name="home" options={{ headerShown: false }} />
-        <Stack.Screen name="profil" options={{ headerShown: false }} />
-        <Stack.Screen name="ubah-password" options={{ headerShown: false }} />
-        <Stack.Screen name="presensi" options={{ headerShown: false }} />
-        <Stack.Screen name="profil-siswa" options={{ headerShown: false }} />
-        <Stack.Screen name="detail-pengumuman" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="register" options={{ headerShown: false }} />
+          <Stack.Screen name="tagihan" options={{ headerShown: false }} />
+          <Stack.Screen name="home" options={{ headerShown: false }} />
+          <Stack.Screen name="profil" options={{ headerShown: false }} />
+          <Stack.Screen name="ubah-password" options={{ headerShown: false }} />
+          <Stack.Screen name="presensi" options={{ headerShown: false }} />
+          <Stack.Screen name="profil-siswa" options={{ headerShown: false }} />
+          <Stack.Screen name="detail-pengumuman" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" />
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

@@ -1,5 +1,6 @@
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useRouter } from 'expo-router';
 
@@ -32,8 +33,15 @@ const BottomNavigation = ({ activeTab, onTabPress }: {
   onTabPress?: (tabKey: string) => void,
 }) => {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+
+  // Menghitung padding bottom yang optimal
+  const bottomPadding = Platform.OS === 'ios'
+    ? Math.max(insets.bottom, 18)
+    : Math.max(insets.bottom, 8);
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: bottomPadding }]}>
       {tabs.map(tab => {
         const isActive = activeTab === tab.key;
         return (
@@ -70,8 +78,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     backgroundColor: '#fff',
-    height: 56,
-    paddingBottom: Platform.OS === 'ios' ? 18 : 0,
+    minHeight: 56,
     borderTopWidth: 0.7,
     borderTopColor: '#ececec',
     justifyContent: 'space-around',

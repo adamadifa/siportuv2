@@ -6,9 +6,9 @@ import React, { useRef, useState } from 'react';
 
 import { StatusBar } from 'expo-status-bar';
 import {
-    ActivityIndicator, Dimensions, Image,
-    SafeAreaView, ScrollView, StyleSheet, Text,
-    TouchableOpacity, View
+  ActivityIndicator, Dimensions, Image,
+  SafeAreaView, ScrollView, StyleSheet, Text,
+  TouchableOpacity, View
 } from 'react-native';
 
 import AnnouncementCard from '../components/AnnouncementCard';
@@ -127,7 +127,7 @@ export default function HomeScreen() {
               <Feather name="log-out" size={24} color="#e53935" />
             </TouchableOpacity>
           </View>
-          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 80 }}>
+          <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
             {/* Panel Siswa */}
             {loading ? (
               <ActivityIndicator size="large" color="#388e3c" style={{ marginTop: 30 }} />
@@ -178,7 +178,7 @@ export default function HomeScreen() {
                         <View style={styles.inisialCircle}>
                           <Text style={styles.inisialText}>{s.nama_lengkap ? s.nama_lengkap.split(' ').slice(0, 2).map((n: string) => n[0]).join('').toUpperCase() : '-'}</Text>
                         </View>
-                        <TouchableOpacity 
+                        <TouchableOpacity
                           style={styles.arrowBtn}
                           onPress={(e) => {
                             console.log('🏠 HOME: Arrow button clicked');
@@ -300,9 +300,10 @@ export default function HomeScreen() {
                   ) : (
                     pengumuman.map((item, idx) => {
                       // Parse tanggal dengan lebih aman
-                      const tanggalParts = item.tanggal ? item.tanggal.split(' ') : ['01', 'Jan'];
+                      const tanggalParts = item.tanggal ? item.tanggal.split(' ') : ['01', 'Jan', '2024'];
                       const tgl = tanggalParts[0] || '01';
                       const bln = tanggalParts[1] || 'Jan';
+                      const tahun = tanggalParts[2] || '2024'; // Ambil tahun dari tanggal
 
                       // Badge warna
                       let categoryColor = '#e0e0e0';
@@ -315,7 +316,7 @@ export default function HomeScreen() {
                           <AnnouncementCard
                             date={tgl}
                             month={bln}
-                            time="08.00"
+                            year={tahun}
                             title={item.judul}
                             location={item.lokasi || 'Lokasi acara belum ditentukan'}
                             category={item.kategori}

@@ -311,7 +311,7 @@ const TagihanScreen = () => {
                     setLoadingRencanaspp(false);
                     return;
                 }
-                const data = await fetchRencanasppByKodeBiaya(token, selectedKodebiaya,selectedUnit);
+                const data = await fetchRencanasppByKodeBiaya(token, selectedKodebiaya, selectedUnit);
                 //console.log(data);
                 setRencanasppList(data);
             } catch (err) {
@@ -438,7 +438,7 @@ const TagihanScreen = () => {
                                     </View>
                                     <View style={styles.profileInfoRow}>
                                         <Feather name="user" size={13} color="#fff" />
-                                        <Text style={styles.profileInfoFancyGreen}> {activeSiswa.gender == 'L' ? 'Laki-laki' : 'Perempuan'}</Text>
+                                        <Text style={styles.profileInfoFancyGreen}> {activeSiswa.jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan'}</Text>
                                         {/* <Feather name="key" size={13} color="#fff" style={{ marginLeft: 8 }} />
                                 <Text style={styles.profileInfoFancyGreen}> {activeSiswa.reg}</Text> */}
                                     </View>
